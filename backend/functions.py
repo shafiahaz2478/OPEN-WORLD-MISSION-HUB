@@ -13,7 +13,7 @@ ALGORITHM = "HS256"
 ph = PasswordHasher()
 
 
-DB_PATH = "./warehouse.db"
+DB_PATH = "./app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
