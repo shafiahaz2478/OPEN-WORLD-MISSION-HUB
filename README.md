@@ -4,7 +4,7 @@
 
 Build a backend application inspired by open-world games. Players can explore available missions, accept missions, complete objectives, and earn rewards. Administrators manage the platform, while mission managers create missions and validate completion.
 
-*(Backend only – no frontend is required.)*
+*(Backend only)*
 
 ## User Roles
 
