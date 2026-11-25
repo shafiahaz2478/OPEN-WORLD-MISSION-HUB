@@ -25,6 +25,8 @@ class Users(Base):
     password = Column(String)
     user_role = Column(String, default ="player")
 
+
+
 Base.metadata.create_all(engine)
 
 

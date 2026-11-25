@@ -42,6 +42,6 @@ jobs:
             sudo usermod -aG docker $USER
             sudo docker pull ${{ env.IMAGE }}:${{ env.VERSION }}
             sudo docker rm -f open-world-mission-hub || true
-            sudo docker run -d --name open-world-mission-hub --restart unless-stopped -v /opt/notes/data:/app/data -p 8001:8001 ${{ env.IMAGE }}:${{ env.VERSION }}
+            sudo docker run -d --name open-world-mission-hub --restart unless-stopped -v /opt/mission/data:/app/data -p 8001:8001 ${{ env.IMAGE }}:${{ env.VERSION }}
             sudo docker image prune -af
             sudo docker ps --filter name=open-world-mission-hub
