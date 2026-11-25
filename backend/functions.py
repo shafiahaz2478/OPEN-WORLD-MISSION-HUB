@@ -25,6 +25,27 @@ class Users(Base):
     password = Column(String)
     user_role = Column(String, default ="player")
 
+class Mission(Base):
+    __tablename__ = "missions"
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    description = Column(String)
+    difficulty = Column(String)
+    location = Column(String)
+    xp_reward = Column(Integer)
+    is_active = Column(Boolean)
+
+
+class MissionAcceptance(Base):
+    __tablename__ = "mission_acceptances"
+    id = Column(Integer, primary_key=True)
+    mission_id = Column(Integer, ForeignKey("missions.id"))
+    player_id = Column(Integer, ForeignKey("users.id"))
+    status = Column(String, default="accepted")
+    completion_details = Column(String)
+    accepted_at = Column(DateTime, default=datetime.now)
+    submitted_at = Column(DateTime)
+
 Base.metadata.create_all(engine)
 
 
