@@ -291,6 +291,6 @@ def create_mission(title: str, description: str, difficulty: str, location: str,
     )
     session.add(new_mission)
     session.commit()
-    session.close()
     response = mission_to_dict(new_mission)
+    session.close()
     return {"code":200,"mission":response}

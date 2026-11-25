@@ -156,4 +156,4 @@ def create_mission(mission: MissionCreate, token: str = Header(None)): #E2
     result = functions.create_mission(title=mission.title,description=mission.description,difficulty=mission.difficulty,location=mission.location,is_active=mission.is_active)
     if result["code"] == 201:
         return result["mission"]
-    raise HTTPException(status_code=result["code"], detail=result["msg"])
+    raise HTTPException(status_code=result["code"], detail=result["mission"])
