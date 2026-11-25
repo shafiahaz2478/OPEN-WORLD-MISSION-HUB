@@ -18,6 +18,12 @@ class Users(BaseModel):
     password : str
     user_role: str
 
+class SubmissionCreate(BaseModel):
+    completion_details: str
+
+class SubmissionReview(BaseModel):
+    status: str
+
 @app.post("/auth/register")
 def register_user(user:Users):
     if functions.register_user(user_name=user.user_name,password=user.password,user_role=user.user_role) is True:
@@ -42,4 +48,36 @@ def refresh(refresh_token):
     access_token = functions.create_token(username=username,token_type="access",user_role=user_role)
     return {"access_token":access_token}
 
+@app.post("/missions/{mission_id}/accept")
+def accept_mission(mission_id: int, token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "player":
+        raise HTTPException(status_code=403, detail="Only players can accept missions")
+    result = functions.accept_mission(username=user["username"], mission_id=mission_id)
+    if result == "not_found":
+        raise HTTPException(status_code=404, detail="Mission not found")
+    if result == "inactive":
+        raise HTTPException(status_code=400, detail="Mission is not active")
+    if result == "already_accepted":
+        raise HTTPException(status_code=400, detail="Mission already accepted")
+    return result
 
+@app.post("/missions/{mission_id}/submit")
+def submit_mission(mission_id: int, body: SubmissionCreate, token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "player":
+        raise HTTPException(status_code=403, detail="Only players can submit mission completion")
+    result = functions.submit_mission(
+        username=user["username"],
+        mission_id=mission_id,
+        completion_details=body.completion_details,
+    )
+    if result == "not_accepted":
+        raise HTTPException(status_code=400, detail="Mission has not been accepted")
+    if result == "already_submitted":
+        raise HTTPException(status_code=400, detail="Mission already submitted or completed")
+    return result
