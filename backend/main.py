@@ -27,8 +27,9 @@ class SubmissionReview(BaseModel):
 class CreateReward(BaseModel):
     name : str
     mission_id : int
-
-
+class CreateMissionManager(BaseModel):
+    user_name:str
+    password:str
 
 
 @app.post("/auth/register")
@@ -125,3 +126,16 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
     if result["code"] == 200:
         return result["reward"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
+
+@app.post("admin/mission-managers")
+def register_mission_manager(mission_manager:CreateMissionManager,token:str = Header(None)):
+    user=functions.verify_token(token=token,token_type="access")
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["user_role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create mission manager accounts")
+    response = functions.create_mission_manager(user_name=mission_manager.user_name,password=mission_manager.password)
+
+    if response["code"] == 201:
+        return {"message":response["msg"]}
+    raise HTTPException(status_code=response["code"], detail=response["msg"])
