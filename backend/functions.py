@@ -208,7 +208,14 @@ def create_rewards(name,mission_id):
     session.close()
     return {"code":200, "reward":response}
 
-
+def view_all_rewards():
+    session = Session(engine)
+    rewards = session.query(Rewards).filter(Rewards.available == True).all()
+    responses = []
+    for reward in rewards:
+        responses.append(rewards_to_dict(reward))
+    session.close()
+    return {"code":200, "rewards":responses}
 
 
 

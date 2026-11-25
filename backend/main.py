@@ -101,3 +101,13 @@ def create_rewards(reward : CreateReward,token=Header(None)):
     raise HTTPException(status_code=result["code"], detail=result["msg"])
 
 
+@app.get("/rewards")
+def create_rewards(token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    result = functions.view_all_rewards()
+    if result["code"] == 200:
+        return result["rewards"]
+    raise HTTPException(status_code=result["code"], detail=result["msg"])
