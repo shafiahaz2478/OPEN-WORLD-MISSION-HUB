@@ -127,7 +127,7 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
         return result["reward"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
 
-@app.post("admin/mission-managers")
+@app.post("/admin/mission-managers")
 def register_mission_manager(mission_manager:CreateMissionManager,token:str = Header(None)):
     user=functions.verify_token(token=token,token_type="access")
     if user is None:

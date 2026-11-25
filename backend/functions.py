@@ -12,8 +12,9 @@ ALGORITHM = "HS256"
 
 ph = PasswordHasher()
 
-
-DB_PATH = "/app/data/missions.db"
+#use this path only when testing in swagger
+DB_PATH = "missions.db"
+#DB_PATH = "/app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
