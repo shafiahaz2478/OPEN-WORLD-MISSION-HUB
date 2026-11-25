@@ -12,7 +12,9 @@ ALGORITHM = "HS256"
 
 ph = PasswordHasher()
 
-
+#use this path only when testing in swagger
+#DB_PATH = "missions.db"
+#real path for docker
 DB_PATH = "/app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
@@ -102,7 +104,7 @@ def verify_token(token,token_type):
 
 #--------- Users -----------
 
-def register_user(user_name:str,password:str,user_role:str="user"):
+def register_user(user_name:str,password:str,user_role:str="player"):
     session = Session(engine)
     user_exists = session.query(Users).filter_by(user_name=user_name).first()
     if user_exists is not None:
@@ -246,3 +248,15 @@ def rewards_to_dict(rewards : Rewards):
 def difficulty_to_xp(difficulty : str):
     difficulty_to_xp_map = {"easy":100 , "medium":100 , "hard":200, "special":500}
     return difficulty_to_xp_map[difficulty.lower()]
+
+def create_mission_manager(user_name:str,password:str):
+    session = Session(engine)
+    user_exists = session.query(Users).filter_by(user_name=user_name).first()
+    if user_exists is not None:
+        session.close()
+        return {"code":400 , "msg":"User already exists"}
+    mission_manager = Users(user_name=user_name,password=ph.hash(password),user_role="mission_manager")
+    session.add(mission_manager)
+    session.commit()
+    session.close()
+    return {"code":200 , "msg":"Mission Manager Account created"}
