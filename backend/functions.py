@@ -83,3 +83,82 @@ def register_user(user_name:str,password:str,user_role:str="user"):
     session.close()
     return True
 
+def accept_mission(username, mission_id):
+    session = Session(engine)
+    mission = session.get(Mission, mission_id)
+    if mission is None:
+        session.close()
+        return "not_found"
+
+    if not mission.is_active:
+        session.close()
+        return "inactive"
+
+    player = session.query(User).filter_by(username=username).first()
+    if player is None:
+        session.close()
+        return "not_found"
+
+    existing_active = (
+        session.query(MissionAcceptance)
+        .filter_by(mission_id=mission_id, player_id=player.id, status="accepted")
+        .first()
+    )
+    if existing_active is not None:
+        session.close()
+        return "already_accepted"
+
+    acceptance = MissionAcceptance(
+        mission_id=mission_id,
+        player_id=player.id,
+        status="accepted",
+    )
+    session.add(acceptance)
+    session.commit()
+
+    response = {
+        "acceptance_id": acceptance.id,
+        "mission_id": acceptance.mission_id,
+        "player_id": acceptance.player_id,
+        "status": acceptance.status,
+        "accepted_at": acceptance.accepted_at,
+    }
+    session.close()
+    return response
+
+
+def submit_mission(username, mission_id, completion_details):
+    session = Session(engine)
+    player = session.query(User).filter_by(username=username).first()
+    if player is None:
+        session.close()
+        return "not_accepted"
+
+    acceptance = (
+        session.query(MissionAcceptance)
+        .filter_by(mission_id=mission_id, player_id=player.id)
+        .order_by(MissionAcceptance.id.desc())
+        .first()
+    )
+    if acceptance is None:
+        session.close()
+        return "not_accepted"
+
+    if acceptance.status != "accepted":
+        session.close()
+        return "already_submitted"
+
+    acceptance.completion_details = completion_details
+    acceptance.status = "submitted"
+    acceptance.submitted_at = datetime.now()
+    session.commit()
+
+    response = {
+        "acceptance_id": acceptance.id,
+        "mission_id": acceptance.mission_id,
+        "status": acceptance.status,
+        "completion_details": acceptance.completion_details,
+        "submitted_at": acceptance.submitted_at,
+    }
+    session.close()
+    return response
