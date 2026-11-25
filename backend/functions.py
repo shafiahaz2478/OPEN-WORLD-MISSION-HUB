@@ -217,6 +217,21 @@ def view_all_rewards():
     session.close()
     return {"code":200, "rewards":responses}
 
+def assign_rewards(reward_id , user_id):
+    session = Session(engine)
+    reward = session.get(Rewards, reward_id)
+    if not reward:
+        return {"code":404 , "msg":"Reward not found"}
+
+    user = session.get(Users, user_id)
+    if not user:
+        return {"code":404 , "msg":"User not found"}
+
+    reward.assigned_to = user_id
+    session.commit()
+    response = rewards_to_dict(reward)
+    session.close()
+    return response
 
 
 def rewards_to_dict(rewards : Rewards):
