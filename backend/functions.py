@@ -13,7 +13,7 @@ ALGORITHM = "HS256"
 ph = PasswordHasher()
 
 
-DB_PATH = "./warehouse.db"
+DB_PATH = "/app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
@@ -25,6 +25,7 @@ class Users(Base):
     password = Column(String)
     user_role = Column(String, default ="player")
 
+<<<<<<< HEAD
 class Mission(Base):
     __tablename__ = "missions"
     id = Column(Integer, primary_key=True)
@@ -46,6 +47,10 @@ class MissionAcceptance(Base):
     accepted_at = Column(DateTime, default=datetime.now)
     submitted_at = Column(DateTime)
 
+=======
+
+
+>>>>>>> e12bd20259cd0d5411106741ae0d1053a4ce852f
 Base.metadata.create_all(engine)
 
 
