@@ -24,6 +24,11 @@ class SubmissionCreate(BaseModel):
 class SubmissionReview(BaseModel):
     status: str
 
+class CreateReward(BaseModel):
+    name : str
+    mission_id : int
+
+
 @app.post("/auth/register")
 def register_user(user:Users):
     if functions.register_user(user_name=user.user_name,password=user.password,user_role=user.user_role) is True:
@@ -81,3 +86,18 @@ def submit_mission(mission_id: int, body: SubmissionCreate, token=Header(None)):
     if result == "already_submitted":
         raise HTTPException(status_code=400, detail="Mission already submitted or completed")
     return result
+
+@app.post("/rewards")
+def create_rewards(reward : CreateReward,token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "mission manager":
+        raise HTTPException(status_code=403, detail="Only Mission manager can create rewards")
+
+    result = functions.create_rewards(reward.name,reward.mission_id)
+    if result["code"] == 200:
+        return result["reward"]
+    raise HTTPException(status_code=result["code"], detail=result["msg"])
+
+
