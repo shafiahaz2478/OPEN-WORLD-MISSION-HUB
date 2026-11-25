@@ -29,6 +29,8 @@ class CreateReward(BaseModel):
     mission_id : int
 
 
+
+
 @app.post("/auth/register")
 def register_user(user:Users):
     if functions.register_user(user_name=user.user_name,password=user.password,user_role=user.user_role) is True:
@@ -110,4 +112,16 @@ def create_rewards(token=Header(None)):
     result = functions.view_all_rewards()
     if result["code"] == 200:
         return result["rewards"]
+    raise HTTPException(status_code=result["code"], detail=result["msg"])
+
+@app.patch("/rewards/{reward_id}")
+def assign_reward(reward_id: int , user_id : int , token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "mission manager":
+        raise HTTPException(status_code=403, detail="Only Mission manager can create rewards")
+    result = functions.create_rewards(reward_id, user_id)
+    if result["code"] == 200:
+        return result["reward"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
