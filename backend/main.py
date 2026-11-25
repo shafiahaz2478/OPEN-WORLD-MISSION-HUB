@@ -30,7 +30,12 @@ class CreateReward(BaseModel):
 class CreateMissionManager(BaseModel):
     user_name:str
     password:str
-
+class MissionCreate(BaseModel):
+    title: str
+    description: str
+    difficulty: str
+    location: str
+    is_active: bool = True
 
 @app.post("/auth/register")
 def register_user(user:Users):
@@ -128,7 +133,7 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
     raise HTTPException(status_code=result["code"], detail=result["msg"])
 
 @app.post("/admin/mission-managers")
-def register_mission_manager(mission_manager:CreateMissionManager,token:str = Header(None)):
+def register_mission_manager(mission_manager:CreateMissionManager,token:str = Header(None)):#E1
     user=functions.verify_token(token=token,token_type="access")
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
@@ -139,3 +144,16 @@ def register_mission_manager(mission_manager:CreateMissionManager,token:str = He
     if response["code"] == 201:
         return {"message":response["msg"]}
     raise HTTPException(status_code=response["code"], detail=response["msg"])
+
+@app.post("/missions")
+def create_mission(mission: MissionCreate, token: str = Header(None)): #E2
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user.get("user_role") != "mission_manager":
+        raise HTTPException(status_code=403, detail="Only mission managers can create missions")
+
+    result = functions.create_mission(title=mission.title,description=mission.description,difficulty=mission.difficulty,location=mission.location,is_active=mission.is_active)
+    if result["code"] == 201:
+        return result["mission"]
+    raise HTTPException(status_code=result["code"], detail=result["mission"])

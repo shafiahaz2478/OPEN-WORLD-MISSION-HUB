@@ -246,10 +246,10 @@ def rewards_to_dict(rewards : Rewards):
     }
 
 def difficulty_to_xp(difficulty : str):
-    difficulty_to_xp_map = {"easy":100 , "medium":100 , "hard":200, "special":500}
+    difficulty_to_xp_map = {"easy":50 , "medium":100 , "hard":200, "special":500}
     return difficulty_to_xp_map[difficulty.lower()]
 
-def create_mission_manager(user_name:str,password:str):
+def create_mission_manager(user_name:str,password:str): #E1
     session = Session(engine)
     user_exists = session.query(Users).filter_by(user_name=user_name).first()
     if user_exists is not None:
@@ -260,3 +260,37 @@ def create_mission_manager(user_name:str,password:str):
     session.commit()
     session.close()
     return {"code":200 , "msg":"Mission Manager Account created"}
+
+
+def mission_to_dict(mission: Mission): #helper func for getting response in E2
+    return {
+        "id": mission.id,
+        "title": mission.title,
+        "description": mission.description,
+        "difficulty": mission.difficulty,
+        "location": mission.location,
+        "xp_reward": mission.xp_reward,
+        "is_active": mission.is_active
+    }
+
+def create_mission(title: str, description: str, difficulty: str, location: str, is_active: bool = True): #E2
+    session = Session(engine)
+    valid_difficulties = ["easy", "medium", "hard", "special"]
+    difficulty = difficulty.lower()
+    if difficulty not in valid_difficulties:
+        return {"code": 400, "msg": "Invalid difficulty. Must be easy, medium, hard, or special"}
+    xp_reward = difficulty_to_xp(difficulty)
+
+    new_mission = Mission(
+        title=title,
+        description=description,
+        difficulty=difficulty,
+        location=location,
+        xp_reward=xp_reward,
+        is_active=is_active
+    )
+    session.add(new_mission)
+    session.commit()
+    response = mission_to_dict(new_mission)
+    session.close()
+    return {"code":200,"mission":response}
