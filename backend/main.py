@@ -157,3 +157,15 @@ def create_mission(mission: MissionCreate, token: str = Header(None)): #E2
     if result["code"] == 201:
         return result["mission"]
     raise HTTPException(status_code=result["code"], detail=result["mission"])
+
+@app.get("/missions")
+def get_available_missions(token:str = Header(None)):
+    user = functions.verify_token(token=token,token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    result = functions.get_available_missions()
+    if result["code"] == 200:
+        return result["missions"]
+    return "something went wrong here, this shouldn't be possible"
+

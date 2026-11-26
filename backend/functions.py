@@ -4,6 +4,7 @@ from datetime import datetime, date, timedelta, timezone
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from urllib3 import response
 
 ACCESS_TOKEN_EXPIRY = 15
 REFRESH_TOKEN_EXPIRY = 7 * 24 * 60
@@ -13,9 +14,9 @@ ALGORITHM = "HS256"
 ph = PasswordHasher()
 
 #use this path only when testing in swagger
-#DB_PATH = "missions.db"
+DB_PATH = "missions.db"
 #real path for docker
-DB_PATH = "/app/data/missions.db"
+#DB_PATH = "/app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
@@ -294,3 +295,13 @@ def create_mission(title: str, description: str, difficulty: str, location: str,
     response = mission_to_dict(new_mission)
     session.close()
     return {"code":200,"mission":response}
+
+def get_available_missions(): #E3, gets all missions where is_active is true
+    session = Session(engine)
+    missions = session.query(Mission).filter(Mission.is_active == True).all()
+    response = []
+    for mission in missions:
+        mission = mission_to_dict(mission)
+        response.append(mission)
+    session.close()
+    return {"code": 200, "missions": response}
