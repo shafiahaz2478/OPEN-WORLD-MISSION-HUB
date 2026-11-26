@@ -26,7 +26,7 @@ class Users(Base):
     user_name = Column(String)
     password = Column(String)
     user_role = Column(String, default ="player")
-    rewards = Column(Integer,default=0)
+    xp = Column(Integer,default=0)
 
 class Mission(Base):
     __tablename__ = "missions"
@@ -324,10 +324,11 @@ def assign_rewards(reward_id , user_id):
     if not user:
         return {"code":404 , "msg":"User not found"}
 
-    if user.rewards is None:
-        user.rewards = 0
+    if user.xp is None:
+        user.xp = 0
 
-    user.rewards += reward.xp
+
+    user.xp += reward.xp
 
     reward.assigned_to = user_id
     session.commit()
@@ -337,7 +338,7 @@ def assign_rewards(reward_id , user_id):
 
 def get_player_rankings(length):
     session = Session(engine)
-    players = session.query(Users).filter(Users.user_role == "player").order_by(Users.rewards.desc()).limit(length).all()
+    players = session.query(Users).filter(Users.user_role == "player").order_by(Users.xp.desc()).limit(length).all()
 
     response = []
     i = 1
@@ -345,7 +346,7 @@ def get_player_rankings(length):
         response.append({
             "rank": i,
             "name" : player.user_name,
-            "xp": player.rewards
+            "xp": player.xp
         })
         i += 1
 
@@ -422,8 +423,6 @@ def get_available_missions(): #E3, gets all missions where is_active is true
     session.close()
     return {"code": 200, "missions": response}
 
-register_user("admin","admin","admin")
-
 def get_mission_info_by_id(mission_id: int): #E4 to get specific mission infp
     session = Session(engine)
     mission = session.get(Mission, mission_id)
@@ -458,3 +457,27 @@ def update_mission(mission_id: int, title: str, description: str, difficulty: st
     response = mission_to_dict(mission)
     session.close()
     return {"code": 200, "mission": response}
+def player_stat(user_id):
+    session = Session(engine)
+    user = session.get(Users , user_id)
+    if not user:
+        return {"code":404 , "msg":"User not found"}
+    mission_accepted = session.query(MissionAcceptance).filter(MissionAcceptance.player_id == user_id).count()
+    mission_completed = session.query(MissionAcceptance).filter(MissionAcceptance.player_id == user_id).filter(MissionAcceptance.status == "completed").count()
+    ranked = session.query(Users.user_id,Users.user_role , func.dense_rank().over(order_by = Users.xp.desc(), partition_by= Users.user_role).label("rank")).subquery()
+
+    rank = session.query(ranked.c.rank).filter(ranked.c.user_id == user_id).scalar()
+
+
+    response = {
+        "user_name" : user.user_name,
+        "xp" : user.xp,
+        "mission_accepted" : mission_accepted,
+        "mission_completed" : mission_completed,
+        "rank" : rank
+    }
+    session.close()
+    return {"code": 200, "stats": response}
+
+
+register_user("admin","admin","admin")
