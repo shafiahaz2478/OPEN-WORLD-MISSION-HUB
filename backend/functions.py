@@ -13,9 +13,9 @@ ALGORITHM = "HS256"
 ph = PasswordHasher()
 
 #use this path only when testing in swagger
-#DB_PATH = "missions.db"
+DB_PATH = "missions.db"
 #real path for docker
-DB_PATH = "./app/data/missions.db"
+#DB_PATH = "/app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
@@ -375,7 +375,7 @@ def create_mission_manager(user_name:str,password:str): #E1
     session.add(mission_manager)
     session.commit()
     session.close()
-    return {"code":200 , "msg":"Mission Manager Account created"}
+    return {"code":201 , "msg":"Mission Manager Account created"}
 
 
 def mission_to_dict(mission: Mission): #helper func for getting response in E2
@@ -409,6 +409,16 @@ def create_mission(title: str, description: str, difficulty: str, location: str,
     session.commit()
     response = mission_to_dict(new_mission)
     session.close()
-    return {"code":200,"mission":response}
+    return {"code":201,"mission":response}
+
+def get_available_missions(): #E3, gets all missions where is_active is true
+    session = Session(engine)
+    missions = session.query(Mission).filter(Mission.is_active == True).all()
+    response = []
+    for mission in missions:
+        mission = mission_to_dict(mission)
+        response.append(mission)
+    session.close()
+    return {"code": 200, "missions": response}
 
 register_user("admin","admin","admin")

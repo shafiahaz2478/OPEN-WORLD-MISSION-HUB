@@ -171,7 +171,7 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
 @app.post("/admin/mission-managers")
 def register_mission_manager(mission_manager:CreateMissionManager,token:str = Header(None)):#E1
     user=functions.verify_token(token=token,token_type="access")
-    if user is None:
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if user["user_role"] != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create mission manager accounts")
@@ -204,3 +204,17 @@ def leaderboard(length = 10,  token=Header(None)):
     if result["code"] == 200:
         return result["leaderboard"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
+
+    raise HTTPException(status_code=result["code"], detail=result["msg"])
+
+@app.get("/missions")
+def get_available_missions(token:str = Header(None)):
+    user = functions.verify_token(token=token,token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    result = functions.get_available_missions()
+    if result["code"] == 200:
+        return result["missions"]
+    return "something went wrong here, this shouldn't be possible"
+
