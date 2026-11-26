@@ -66,7 +66,7 @@ def accept_mission(mission_id: int, token=Header(None)):
     user = functions.verify_token(token=token, token_type="access")
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    if user["role"] != "player":
+    if user["user_role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can accept missions")
     result = functions.accept_mission(username=user["username"], mission_id=mission_id)
     if result == "not_found":
@@ -82,7 +82,7 @@ def submit_mission(mission_id: int, body: SubmissionCreate, token=Header(None)):
     user = functions.verify_token(token=token, token_type="access")
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    if user["role"] != "player":
+    if user["user_role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can submit mission completion")
     result = functions.submit_mission(
         username=user["username"],
@@ -100,7 +100,7 @@ def create_rewards(reward : CreateReward,token=Header(None)):
     user = functions.verify_token(token=token, token_type="access")
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    if user["role"] != "mission manager":
+    if user["user_role"] != "mission manager":
         raise HTTPException(status_code=403, detail="Only Mission manager can create rewards")
 
     result = functions.create_rewards(reward.name,reward.mission_id)
@@ -125,7 +125,7 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
     user = functions.verify_token(token=token, token_type="access")
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    if user["role"] != "mission manager":
+    if user["user_role"] != "mission manager":
         raise HTTPException(status_code=403, detail="Only Mission manager can create rewards")
     result = functions.create_rewards(reward_id, user_id)
     if result["code"] == 200:

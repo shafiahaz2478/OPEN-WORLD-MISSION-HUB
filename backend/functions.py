@@ -26,6 +26,7 @@ class Users(Base):
     user_name = Column(String)
     password = Column(String)
     user_role = Column(String, default ="player")
+    rewards = Column(String)
 
 class Mission(Base):
     __tablename__ = "missions"
@@ -142,7 +143,7 @@ def accept_mission(username, mission_id):
 
     acceptance = MissionAcceptance(
         mission_id=mission_id,
-        player_id=player.id,
+        player_id=player.user_id,
         status="accepted",
     )
     session.add(acceptance)
