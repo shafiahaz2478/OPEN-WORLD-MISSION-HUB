@@ -1,10 +1,9 @@
-from sqlalchemy import Integer, String, Float, Column, create_engine, DateTime, ForeignKey, func, Date, Boolean
+from sqlalchemy import Integer, String,Float, Column, create_engine, DateTime, ForeignKey, func, Date, Boolean
 from sqlalchemy.orm import Session, declarative_base, session
 from datetime import datetime, date, timedelta, timezone
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from urllib3 import response
 
 ACCESS_TOKEN_EXPIRY = 15
 REFRESH_TOKEN_EXPIRY = 7 * 24 * 60
@@ -27,6 +26,7 @@ class Users(Base):
     user_name = Column(String)
     password = Column(String)
     user_role = Column(String, default ="player")
+    rewards = Column(Integer,default=0)
 
 class Mission(Base):
     __tablename__ = "missions"
@@ -116,7 +116,7 @@ def register_user(user_name:str,password:str,user_role:str="player"):
     session.close()
     return True
 
-def accept_mission(username, mission_id):
+def accept_mission(user_name, mission_id):
     session = Session(engine)
     mission = session.get(Mission, mission_id)
     if mission is None:
@@ -127,7 +127,7 @@ def accept_mission(username, mission_id):
         session.close()
         return "inactive"
 
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=user_name).first()
     if player is None:
         session.close()
         return "not_found"
@@ -143,7 +143,7 @@ def accept_mission(username, mission_id):
 
     acceptance = MissionAcceptance(
         mission_id=mission_id,
-        player_id=player.id,
+        player_id=player.user_id,
         status="accepted",
     )
     session.add(acceptance)
@@ -160,9 +160,9 @@ def accept_mission(username, mission_id):
     return response
 
 
-def submit_mission(username, mission_id, completion_details):
+def submit_mission(user_name, mission_id, completion_details):
     session = Session(engine)
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=user_name).first()
     if player is None:
         session.close()
         return "not_accepted"
@@ -196,6 +196,100 @@ def submit_mission(username, mission_id, completion_details):
     session.close()
     return response
 
+def get_active_player_missions(username):
+    session = Session(engine)
+    player = session.query(Users).filter_by(user_name=username).first()
+    if player is None:
+        session.close()
+        return []
+
+    acceptances = (
+        session.query(MissionAcceptance)
+        .filter_by(player_id=player.user_id, status="accepted")
+        .all()
+    )
+
+    result = []
+    for acc in acceptances:
+        mission = session.get(Mission, acc.mission_id)
+        if mission is not None:
+            result.append({
+                "acceptance_id": acc.id,
+                "mission_id": mission.id,
+                "title": mission.title,
+                "description": mission.description,
+                "difficulty": mission.difficulty,
+                "location": mission.location,
+                "xp_reward": mission.xp_reward,
+                "status": acc.status,
+                "accepted_at": acc.accepted_at,
+            })
+
+    session.close()
+    return result
+
+def review_submission(reviewer_username, submission_id, status):
+    session = Session(engine)
+    acceptance = session.get(MissionAcceptance, submission_id)
+    if acceptance is None:
+        session.close()
+        return "not_found"
+
+    reviewer = session.query(Users).filter_by(user_name=reviewer_username).first()
+    mission = session.get(Mission, acceptance.mission_id)
+    player = session.get(Users, acceptance.player_id)
+
+    acceptance.status = "completed" if status == "approved" else "accepted"
+
+    xp_awarded = 0
+    if status == "approved" and mission is not None and player is not None:
+        xp_awarded = mission.xp_reward
+        player.xp = player.xp + xp_awarded
+
+    session.commit()
+
+    response = {
+        "submission_id": acceptance.id,
+        "mission_id": acceptance.mission_id,
+        "player_id": acceptance.player_id,
+        "status": acceptance.status,
+        "reviewed_by": reviewer.user_id if reviewer is not None else None,
+        "xp_awarded": xp_awarded,
+    }
+    session.close()
+    return response
+
+def get_completed_player_missions(username):
+    session = Session(engine)
+    player = session.query(Users).filter_by(user_name=username).first()
+    if player is None:
+        session.close()
+        return []
+
+    acceptances = (
+        session.query(MissionAcceptance)
+        .filter_by(player_id=player.user_id, status="completed")
+        .all()
+    )
+
+    result = []
+    for acc in acceptances:
+        mission = session.get(Mission, acc.mission_id)
+        if mission is not None:
+            result.append({
+                "acceptance_id": acc.id,
+                "mission_id": mission.id,
+                "title": mission.title,
+                "description": mission.description,
+                "difficulty": mission.difficulty,
+                "location": mission.location,
+                "xp_earned": mission.xp_reward,
+                "completion_details": acc.completion_details,
+                "status": acc.status,
+            })
+
+    session.close()
+    return result
 def create_rewards(name,mission_id):
     session = Session(engine)
     mission = session.get(Mission , mission_id)
@@ -230,12 +324,33 @@ def assign_rewards(reward_id , user_id):
     if not user:
         return {"code":404 , "msg":"User not found"}
 
+    if user.rewards is None:
+        user.rewards = 0
+
+    user.rewards += reward.xp
+
     reward.assigned_to = user_id
     session.commit()
     response = rewards_to_dict(reward)
     session.close()
-    return response
+    return {"code":200, "reward":response}
 
+def get_player_rankings(length):
+    session = Session(engine)
+    players = session.query(Users).filter(Users.user_role == "player").order_by(Users.rewards.desc()).limit(length).all()
+
+    response = []
+    i = 1
+    for player in players:
+        response.append({
+            "rank": i,
+            "name" : player.user_name,
+            "xp": player.rewards
+        })
+        i += 1
+
+    session.close()
+    return {"code":200, "leaderboard":response}
 
 def rewards_to_dict(rewards : Rewards):
     return {
@@ -305,3 +420,5 @@ def get_available_missions(): #E3, gets all missions where is_active is true
         response.append(mission)
     session.close()
     return {"code": 200, "missions": response}
+
+register_user("admin","admin","admin")
