@@ -73,10 +73,10 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E8** | Submit mission completion details | Player | POST |  |  |  | 
 | **E9** | Approve or reject a mission completion | Mission Manager | PATCH |  |  |  | 
 | **E10** | Get a player's completed mission history | Player | GET |  |  |  | 
-| **E11** | Create a reward for a mission | Mission Manager |  |  |  |  | 
-| **E12** | Get available rewards | All |  |  |  |  | 
-| **E13** | Assign a reward to a player | Mission Manager |  |  |  |  | 
-| **E14** | Get player rankings and leaderboard | All |  |  |  |  | 
+| **E11** | Create a reward for a mission | Mission Manager | POST | /rewards | {"name": "string","mission_id": 0} |  | 
+| **E12** | Get available rewards | All | GET | /rewards |  |  | 
+| **E13** | Assign a reward to a player | Mission Manager | POST | /rewards/{reward_id} |  |  | 
+| **E14** | Get player rankings and leaderboard | All | GET | /leaderboard |  |  | 
 | **E15** | Get player profile and statistics | All |  |  |  |  | 
 
 ## Database Tables (To Be Designed)
@@ -106,8 +106,8 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E8** | Submit mission completion details |  |  | 
 | **E9** | Approve or reject a mission completion |  |  | 
 | **E10** | Get a player's completed mission history |  |  | 
-| **E11** | Create a reward for a mission |  |  | 
-| **E12** | Get available rewards |  |  | 
-| **E13** | Assign a reward to a player |  |  | 
-| **E14** | Get player rankings and leaderboard |  |  | 
-| **E15** | Get player profile and statistics |  |  | 
+| **E11** | Create a reward for a mission | Shafi | ✅ | 
+| **E12** | Get available rewards | Shafi | ✅ | 
+| **E13** | Assign a reward to a player | Shafi | 🟡 | 
+| **E14** | Get player rankings and leaderboard | Shafi | 🟡 | 
+| **E15** | Get player profile and statistics | Shafi |  | 

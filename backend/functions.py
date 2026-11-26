@@ -26,6 +26,7 @@ class Users(Base):
     user_name = Column(String)
     password = Column(String)
     user_role = Column(String, default ="player")
+    rewards = Column(Integer)
 
 class Mission(Base):
     __tablename__ = "missions"
@@ -142,7 +143,7 @@ def accept_mission(username, mission_id):
 
     acceptance = MissionAcceptance(
         mission_id=mission_id,
-        player_id=player.id,
+        player_id=player.user_id,
         status="accepted",
     )
     session.add(acceptance)
@@ -229,11 +230,35 @@ def assign_rewards(reward_id , user_id):
     if not user:
         return {"code":404 , "msg":"User not found"}
 
+    user.rewards += reward.xp
+
     reward.assigned_to = user_id
     session.commit()
     response = rewards_to_dict(reward)
     session.close()
-    return response
+    return {"code":200, "leaderboard":response}
+
+def get_player_rankings(length):
+    session = Session(engine)
+    players = session.query(Users).filter(Users.user_role == "player").order_by(Users.rewards.desc()).limit(length).all()
+
+    response = []
+    i = 1
+    for player in players:
+        response.append({
+            "rank": i,
+            "name" : player.user_name,
+            "xp": player.rewards
+        })
+        i += 1
+
+    session.close()
+    return {"code":200, "rewards":response}
+
+
+
+
+
 
 
 def rewards_to_dict(rewards : Rewards):
