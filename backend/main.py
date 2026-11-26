@@ -35,7 +35,7 @@ class MissionCreate(BaseModel):
     description: str
     difficulty: str
     location: str
-    is_active: boofix typosl = True
+    is_active: bool = True
 
 @app.post("/auth/register")
 def register_user(user:Users):
