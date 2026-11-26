@@ -127,7 +127,7 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if user["user_role"] != "mission_manager":
         raise HTTPException(status_code=403, detail="Only Mission manager can create rewards")
-    result = functions.create_rewards(reward_id, user_id)
+    result = functions.assign_rewards(reward_id, user_id)
     if result["code"] == 200:
         return result["reward"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
