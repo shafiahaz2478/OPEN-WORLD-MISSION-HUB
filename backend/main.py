@@ -205,6 +205,17 @@ def leaderboard(length = 10,  token=Header(None)):
         return result["leaderboard"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
 
+@app.get("/stats/{user_id}")
+def get_stats(user_id: int , token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    result = functions.player_stat(user_id)
+    if result["code"] == 200:
+        return result["stats"]
+    raise HTTPException(status_code=result["code"], detail=result["msg"])
+
 @app.get("/missions")
 def get_available_missions(token:str = Header(None)):
     user = functions.verify_token(token=token,token_type="access")

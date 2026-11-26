@@ -67,8 +67,7 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E2** | Create a new mission | Mission Manager |  |  |  |  | 
 | **E3** | Get all available missions | All |  |  |  |  | 
 | **E4** | Get details of a particular mission | All |  |  |  |  | 
-| **E5** | Update mission details or availability | Mission Manager |  |  |  |  | 
-
+| **E5** | Update mission details or availability | Mission Manager |  |  |  |  |
 | **E6** | Accept a mission | Player | POST | /missions/{mission_id}/accept | | |
 | **E7** | Get missions accepted by the logged-in player | Player | GET | /players/me/missions/active | | |
 | **E8** | Submit mission completion details | Player | POST | /missions/{mission_id}/submit | | |
@@ -78,8 +77,7 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E12** | Get available rewards | All | GET | /rewards | | |
 | **E13** | Assign a reward to a player | Mission Manager | POST | /rewards/{reward_id} | | |
 | **E14** | Get player rankings and leaderboard | All | GET | /leaderboard | | |
-
-| **E15** | Get player profile and statistics | All |  |  |  |  | 
+| **E15** | Get player profile and statistics | All | GET | /stats/{user_id} |  |  | 
 
 ## Database Tables (To Be Designed)
 
@@ -102,8 +100,7 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E2** | Create a new mission |  |  | 
 | **E3** | Get all available missions |  |  | 
 | **E4** | Get details of a particular mission |  |  | 
-| **E5** | Update mission details or availability |  |  | 
-
+| **E5** | Update mission details or availability |  |  |
 | **E6** | Accept a mission | Soham | Complete |
 | **E7** | Get missions accepted by the logged-in player | Soham | ✅ |
 | **E8** | Submit mission completion details | Soham | ✅ |
@@ -111,7 +108,6 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E10** | Get a player's completed mission history | Soham | ✅ |
 | **E11** | Create a reward for a mission | Shafi | ✅ |
 | **E12** | Get available rewards | Shafi | ✅ |
-| **E13** | Assign a reward to a player | Shafi | 🟡 |
-| **E14** | Get player rankings and leaderboard | Shafi | 🟡 |
-| **E15** | Get player profile and statistics | Shafi | |
-
+| **E13** | Assign a reward to a player | Shafi | ✅ |
+| **E14** | Get player rankings and leaderboard | Shafi | ✅ |
+| **E15** | Get player profile and statistics | Shafi |🟡 |
