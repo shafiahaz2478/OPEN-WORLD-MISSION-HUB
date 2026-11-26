@@ -260,7 +260,7 @@ def create_mission_manager(user_name:str,password:str): #E1
     session.add(mission_manager)
     session.commit()
     session.close()
-    return {"code":200 , "msg":"Mission Manager Account created"}
+    return {"code":201 , "msg":"Mission Manager Account created"}
 
 
 def mission_to_dict(mission: Mission): #helper func for getting response in E2
@@ -294,7 +294,7 @@ def create_mission(title: str, description: str, difficulty: str, location: str,
     session.commit()
     response = mission_to_dict(new_mission)
     session.close()
-    return {"code":200,"mission":response}
+    return {"code":201,"mission":response}
 
 def get_available_missions(): #E3, gets all missions where is_active is true
     session = Session(engine)
