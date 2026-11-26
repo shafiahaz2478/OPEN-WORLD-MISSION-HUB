@@ -293,7 +293,7 @@ def get_completed_player_missions(username):
 def create_rewards(name,mission_id):
     session = Session(engine)
     mission = session.get(Mission , mission_id)
-    if not mission_id:
+    if not mission:
         return {"code":404 , "msg":"Mission not found"}
     xp = difficulty_to_xp(mission.difficulty)
 
