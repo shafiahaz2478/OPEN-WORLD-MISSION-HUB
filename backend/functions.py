@@ -25,7 +25,6 @@ class Users(Base):
     password = Column(String)
     user_role = Column(String, default ="player")
 
-<<<<<<< HEAD
 class Mission(Base):
     __tablename__ = "missions"
     id = Column(Integer, primary_key=True)
@@ -34,7 +33,7 @@ class Mission(Base):
     difficulty = Column(String)
     location = Column(String)
     xp_reward = Column(Integer)
-    is_active = Column(Boolean)
+    is_active = Column(bool)
 
 
 class MissionAcceptance(Base):
@@ -47,10 +46,6 @@ class MissionAcceptance(Base):
     accepted_at = Column(DateTime, default=datetime.now)
     submitted_at = Column(DateTime)
 
-=======
-
-
->>>>>>> e12bd20259cd0d5411106741ae0d1053a4ce852f
 Base.metadata.create_all(engine)
 
 
@@ -120,7 +115,7 @@ def accept_mission(username, mission_id):
         session.close()
         return "inactive"
 
-    player = session.query(User).filter_by(username=username).first()
+    player = session.query(Users).filter_by(username=username).first()
     if player is None:
         session.close()
         return "not_found"
@@ -155,7 +150,7 @@ def accept_mission(username, mission_id):
 
 def submit_mission(username, mission_id, completion_details):
     session = Session(engine)
-    player = session.query(User).filter_by(username=username).first()
+    player = session.query(Users).filter_by(username=username).first()
     if player is None:
         session.close()
         return "not_accepted"
@@ -188,3 +183,98 @@ def submit_mission(username, mission_id, completion_details):
     }
     session.close()
     return response
+
+def get_active_player_missions(username):
+    session = Session(engine)
+    player = session.query(Users).filter_by(username=username).first()
+    if player is None:
+        session.close()
+        return []
+
+    acceptances = (
+        session.query(MissionAcceptance)
+        .filter_by(player_id=player.id, status="accepted")
+        .all()
+    )
+
+    result = []
+    for acc in acceptances:
+        mission = session.get(Mission, acc.mission_id)
+        if mission is not None:
+            result.append({
+                "acceptance_id": acc.id,
+                "mission_id": mission.id,
+                "title": mission.title,
+                "description": mission.description,
+                "difficulty": mission.difficulty,
+                "location": mission.location,
+                "xp_reward": mission.xp_reward,
+                "status": acc.status,
+                "accepted_at": acc.accepted_at,
+            })
+
+    session.close()
+    return result
+
+def review_submission(reviewer_username, submission_id, status):
+    session = Session(engine)
+    acceptance = session.get(MissionAcceptance, submission_id)
+    if acceptance is None:
+        session.close()
+        return "not_found"
+
+    reviewer = session.query(Users).filter_by(username=reviewer_username).first()
+    mission = session.get(Mission, acceptance.mission_id)
+    player = session.get(Users, acceptance.player_id)
+
+    acceptance.status = status
+
+    xp_awarded = 0
+    if status == "approved" and mission is not None and player is not None:
+        xp_awarded = mission.xp_reward
+        player.xp = player.xp + xp_awarded
+
+    session.commit()
+
+    response = {
+        "submission_id": acceptance.id,
+        "mission_id": acceptance.mission_id,
+        "player_id": acceptance.player_id,
+        "status": acceptance.status,
+        "reviewed_by": reviewer.id if reviewer is not None else None,
+        "xp_awarded": xp_awarded,
+    }
+    session.close()
+    return response
+
+def get_completed_player_missions(username):
+    session = Session(engine)
+    player = session.query(Users).filter_by(username=username).first()
+    if player is None:
+        session.close()
+        return []
+
+    acceptances = (
+        session.query(MissionAcceptance)
+        .filter_by(player_id=player.id, status="approved")
+        .all()
+    )
+
+    result = []
+    for acc in acceptances:
+        mission = session.get(Mission, acc.mission_id)
+        if mission is not None:
+            result.append({
+                "acceptance_id": acc.id,
+                "mission_id": mission.id,
+                "title": mission.title,
+                "description": mission.description,
+                "difficulty": mission.difficulty,
+                "location": mission.location,
+                "xp_earned": mission.xp_reward,
+                "completion_details": acc.completion_details,
+                "status": acc.status,
+            })
+
+    session.close()
+    return result
