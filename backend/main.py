@@ -84,7 +84,7 @@ def submit_mission(mission_id: int, body: SubmissionCreate, token=Header(None)):
     if user["user_role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can submit mission completion")
     result = functions.submit_mission(
-        username=user["username"],
+        user_name=user["username"],
         mission_id=mission_id,
         completion_details=body.completion_details,
     )
@@ -101,7 +101,7 @@ def get_active_missions(token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if user["user_role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can view accepted missions")
-    return functions.get_active_player_missions(username=user["user_name"])
+    return functions.get_active_player_missions(username=user["username"])
 
 @app.patch("/submissions/{submission_id}/review")
 def review_submission(submission_id: int, body: SubmissionReview, token=Header(None)):
@@ -113,7 +113,7 @@ def review_submission(submission_id: int, body: SubmissionReview, token=Header(N
     if body.status not in ["approved", "rejected"]:
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
     result = functions.review_submission(
-        reviewer_username=user["user_name"],
+        reviewer_username=user["username"],
         submission_id=submission_id,
         status=body.status,
     )
@@ -128,7 +128,7 @@ def get_completed_missions(token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if user["user_role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can view completed mission history")
-    return functions.get_completed_player_missions(username=user["user_name"])
+    return functions.get_completed_player_missions(username=user["username"])
 
 @app.post("/rewards")
 def create_rewards(reward : CreateReward,token=Header(None)):
