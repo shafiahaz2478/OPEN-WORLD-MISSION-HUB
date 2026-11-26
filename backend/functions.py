@@ -13,9 +13,9 @@ ALGORITHM = "HS256"
 ph = PasswordHasher()
 
 #use this path only when testing in swagger
-DB_PATH = "missions.db"
+#DB_PATH = "missions.db"
 #real path for docker
-#DB_PATH = "/app/data/missions.db"
+DB_PATH = "/app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
@@ -394,6 +394,7 @@ def create_mission(title: str, description: str, difficulty: str, location: str,
     valid_difficulties = ["easy", "medium", "hard", "special"]
     difficulty = difficulty.lower()
     if difficulty not in valid_difficulties:
+        session.close()
         return {"code": 400, "msg": "Invalid difficulty. Must be easy, medium, hard, or special"}
     xp_reward = difficulty_to_xp(difficulty)
 
@@ -422,3 +423,14 @@ def get_available_missions(): #E3, gets all missions where is_active is true
     return {"code": 200, "missions": response}
 
 register_user("admin","admin","admin")
+
+def get_mission_info_by_id(mission_id: int): #E4 to get specific mission infp
+    session = Session(engine)
+    mission = session.get(Mission, mission_id)
+    if mission is None:
+        session.close()
+        return {"code": 404, "msg": "Mission not found"}
+    response = mission_to_dict(mission)
+    session.close()
+    return {"code": 200, "mission": response}
+

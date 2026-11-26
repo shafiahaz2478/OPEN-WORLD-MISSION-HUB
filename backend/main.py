@@ -192,7 +192,7 @@ def create_mission(mission: MissionCreate, token: str = Header(None)): #E2
     result = functions.create_mission(title=mission.title,description=mission.description,difficulty=mission.difficulty,location=mission.location,is_active=mission.is_active)
     if result["code"] == 201:
         return result["mission"]
-    raise HTTPException(status_code=result["code"], detail=result["mission"])
+    raise HTTPException(status_code=result["code"], detail=result["msg"])
 
 @app.get("/leaderboard")
 def leaderboard(length = 10,  token=Header(None)):
@@ -205,8 +205,6 @@ def leaderboard(length = 10,  token=Header(None)):
         return result["leaderboard"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
 
-    raise HTTPException(status_code=result["code"], detail=result["msg"])
-
 @app.get("/missions")
 def get_available_missions(token:str = Header(None)):
     user = functions.verify_token(token=token,token_type="access")
@@ -216,5 +214,15 @@ def get_available_missions(token:str = Header(None)):
     result = functions.get_available_missions()
     if result["code"] == 200:
         return result["missions"]
-    return "something went wrong here, this shouldn't be possible"
+    raise HTTPException(status_code=500, detail="mission retrieval failed")
 
+@app.get("/missions/{mission_id}")
+def get_mission_info_by_id(mission_id:int,token:str = Header(None)): #E4
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    result = functions.get_mission_info_by_id(mission_id=mission_id)
+    if result["code"] == 200:
+        return result["mission"]
+    raise HTTPException(status_code=result["code"],detail=result["msg"])
