@@ -227,7 +227,7 @@ def review_submission(reviewer_username, submission_id, status):
     mission = session.get(Mission, acceptance.mission_id)
     player = session.get(Users, acceptance.player_id)
 
-    acceptance.status = status
+    acceptance.status =  "completed" if status == "approved" else "accepted"
 
     xp_awarded = 0
     if status == "approved" and mission is not None and player is not None:
