@@ -134,7 +134,7 @@ def accept_mission(user_name, mission_id):
 
     existing_active = (
         session.query(MissionAcceptance)
-        .filter_by(mission_id=mission_id, player_id=player.id, status="accepted")
+        .filter_by(mission_id=mission_id, player_id=player.user_id, status="accepted")
         .first()
     )
     if existing_active is not None:
@@ -169,7 +169,7 @@ def submit_mission(user_name, mission_id, completion_details):
 
     acceptance = (
         session.query(MissionAcceptance)
-        .filter_by(mission_id=mission_id, player_id=player.id)
+        .filter_by(mission_id=mission_id, player_id=player.user_id)
         .order_by(MissionAcceptance.id.desc())
         .first()
     )
