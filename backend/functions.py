@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String,Float, Column, create_engine, DateTime, ForeignKey, func, Date
+from sqlalchemy import Integer, String,Float, Column, create_engine, DateTime, ForeignKey, func, Date, Boolean
 from sqlalchemy.orm import Session, declarative_base, session
 from datetime import datetime, date, timedelta, timezone
 import jwt
@@ -13,7 +13,7 @@ ALGORITHM = "HS256"
 ph = PasswordHasher()
 
 
-DB_PATH = "/app/data/missions.db"
+DB_PATH = "./app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
@@ -33,14 +33,14 @@ class Mission(Base):
     difficulty = Column(String)
     location = Column(String)
     xp_reward = Column(Integer)
-    is_active = Column(bool)
+    is_active = Column(Boolean)
 
 
 class MissionAcceptance(Base):
     __tablename__ = "mission_acceptances"
     id = Column(Integer, primary_key=True)
     mission_id = Column(Integer, ForeignKey("missions.id"))
-    player_id = Column(Integer, ForeignKey("users.id"))
+    player_id = Column(Integer, ForeignKey("Users.user_id"))
     status = Column(String, default="accepted")
     completion_details = Column(String)
     accepted_at = Column(DateTime, default=datetime.now)
@@ -104,7 +104,7 @@ def register_user(user_name:str,password:str,user_role:str="user"):
     session.close()
     return True
 
-def accept_mission(username, mission_id):
+def accept_mission(user_name, mission_id):
     session = Session(engine)
     mission = session.get(Mission, mission_id)
     if mission is None:
@@ -115,7 +115,7 @@ def accept_mission(username, mission_id):
         session.close()
         return "inactive"
 
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=user_name).first()
     if player is None:
         session.close()
         return "not_found"
@@ -148,9 +148,9 @@ def accept_mission(username, mission_id):
     return response
 
 
-def submit_mission(username, mission_id, completion_details):
+def submit_mission(user_name, mission_id, completion_details):
     session = Session(engine)
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=user_name).first()
     if player is None:
         session.close()
         return "not_accepted"

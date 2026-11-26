@@ -55,7 +55,7 @@ def accept_mission(mission_id: int, token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if user["role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can accept missions")
-    result = functions.accept_mission(username=user["username"], mission_id=mission_id)
+    result = functions.accept_mission(user_name=user["username"], mission_id=mission_id)
     if result == "not_found":
         raise HTTPException(status_code=404, detail="Mission not found")
     if result == "inactive":
