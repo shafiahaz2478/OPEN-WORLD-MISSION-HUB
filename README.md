@@ -110,4 +110,4 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E12** | Get available rewards | Shafi | ✅ |
 | **E13** | Assign a reward to a player | Shafi | ✅ |
 | **E14** | Get player rankings and leaderboard | Shafi | ✅ |
-| **E15** | Get player profile and statistics | Shafi |🟡 |
+| **E15** | Get player profile and statistics | Shafi |✅ |
