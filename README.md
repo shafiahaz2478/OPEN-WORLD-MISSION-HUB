@@ -68,15 +68,17 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E3** | Get all available missions | All |  |  |  |  | 
 | **E4** | Get details of a particular mission | All |  |  |  |  | 
 | **E5** | Update mission details or availability | Mission Manager |  |  |  |  | 
-| **E6** | Accept a mission | Player | POST |  |  |  | 
-| **E7** | Get missions accepted by the logged-in player | Player | GET |  |  |  | 
-| **E8** | Submit mission completion details | Player | POST |  |  |  | 
-| **E9** | Approve or reject a mission completion | Mission Manager | PATCH |  |  |  | 
-| **E10** | Get a player's completed mission history | Player | GET |  |  |  | 
-| **E11** | Create a reward for a mission | Mission Manager | POST | /rewards | {"name": "string","mission_id": 0} |  | 
-| **E12** | Get available rewards | All | GET | /rewards |  |  | 
-| **E13** | Assign a reward to a player | Mission Manager | POST | /rewards/{reward_id} |  |  | 
-| **E14** | Get player rankings and leaderboard | All | GET | /leaderboard |  |  | 
+
+| **E6** | Accept a mission | Player | POST | /missions/{mission_id}/accept | | |
+| **E7** | Get missions accepted by the logged-in player | Player | GET | /players/me/missions/active | | |
+| **E8** | Submit mission completion details | Player | POST | /missions/{mission_id}/submit | | |
+| **E9** | Approve or reject a mission completion | Mission Manager | PATCH | /submissions/{submission_id}/review | | |
+| **E10** | Get a player's completed mission history | Player | GET | /players/me/missions/completed | | |
+| **E11** | Create a reward for a mission | Mission Manager | POST | /rewards | {"name": "string","mission_id": 0} | |
+| **E12** | Get available rewards | All | GET | /rewards | | |
+| **E13** | Assign a reward to a player | Mission Manager | POST | /rewards/{reward_id} | | |
+| **E14** | Get player rankings and leaderboard | All | GET | /leaderboard | | |
+
 | **E15** | Get player profile and statistics | All |  |  |  |  | 
 
 ## Database Tables (To Be Designed)
@@ -101,13 +103,15 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E3** | Get all available missions |  |  | 
 | **E4** | Get details of a particular mission |  |  | 
 | **E5** | Update mission details or availability |  |  | 
-| **E6** | Accept a mission |  |  | 
-| **E7** | Get missions accepted by the logged-in player |  |  | 
-| **E8** | Submit mission completion details |  |  | 
-| **E9** | Approve or reject a mission completion |  |  | 
-| **E10** | Get a player's completed mission history |  |  | 
-| **E11** | Create a reward for a mission | Shafi | ✅ | 
-| **E12** | Get available rewards | Shafi | ✅ | 
-| **E13** | Assign a reward to a player | Shafi | 🟡 | 
-| **E14** | Get player rankings and leaderboard | Shafi | 🟡 | 
-| **E15** | Get player profile and statistics | Shafi |  | 
+
+| **E6** | Accept a mission | Soham | Complete |
+| **E7** | Get missions accepted by the logged-in player | Soham | ✅ |
+| **E8** | Submit mission completion details | Soham | ✅ |
+| **E9** | Approve or reject a mission completion | Soham | ✅ |
+| **E10** | Get a player's completed mission history | Soham | ✅ |
+| **E11** | Create a reward for a mission | Shafi | ✅ |
+| **E12** | Get available rewards | Shafi | ✅ |
+| **E13** | Assign a reward to a player | Shafi | 🟡 |
+| **E14** | Get player rankings and leaderboard | Shafi | 🟡 |
+| **E15** | Get player profile and statistics | Shafi | |
+

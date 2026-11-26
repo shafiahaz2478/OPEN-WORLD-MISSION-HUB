@@ -68,7 +68,7 @@ def accept_mission(mission_id: int, token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if user["user_role"] != "player":
         raise HTTPException(status_code=403, detail="Only players can accept missions")
-    result = functions.accept_mission(username=user["username"], mission_id=mission_id)
+    result = functions.accept_mission(user_name=user["username"], mission_id=mission_id)
     if result == "not_found":
         raise HTTPException(status_code=404, detail="Mission not found")
     if result == "inactive":
@@ -94,6 +94,42 @@ def submit_mission(mission_id: int, body: SubmissionCreate, token=Header(None)):
     if result == "already_submitted":
         raise HTTPException(status_code=400, detail="Mission already submitted or completed")
     return result
+
+@app.get("/players/me/missions/active")
+def get_active_missions(token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["user_role"] != "player":
+        raise HTTPException(status_code=403, detail="Only players can view accepted missions")
+    return functions.get_active_player_missions(username=user["user_name"])
+
+@app.patch("/submissions/{submission_id}/review")
+def review_submission(submission_id: int, body: SubmissionReview, token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["user_role"] != "mission_manager":
+        raise HTTPException(status_code=403, detail="Only mission managers can review submissions")
+    if body.status not in ["approved", "rejected"]:
+        raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
+    result = functions.review_submission(
+        reviewer_username=user["user_name"],
+        submission_id=submission_id,
+        status=body.status,
+    )
+    if result == "not_found":
+        raise HTTPException(status_code=404, detail="Submission not found")
+    return result
+
+@app.get("/players/me/missions/completed")
+def get_completed_missions(token=Header(None)):
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["user_role"] != "player":
+        raise HTTPException(status_code=403, detail="Only players can view completed mission history")
+    return functions.get_completed_player_missions(username=user["user_name"])
 
 @app.post("/rewards")
 def create_rewards(reward : CreateReward,token=Header(None)):

@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Float, Column, create_engine, DateTime, ForeignKey, func, Date, Boolean
+from sqlalchemy import Integer, String,Float, Column, create_engine, DateTime, ForeignKey, func, Date, Boolean
 from sqlalchemy.orm import Session, declarative_base, session
 from datetime import datetime, date, timedelta, timezone
 import jwt
@@ -15,7 +15,7 @@ ph = PasswordHasher()
 #use this path only when testing in swagger
 #DB_PATH = "missions.db"
 #real path for docker
-DB_PATH = "/app/data/missions.db"
+DB_PATH = "./app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
@@ -116,7 +116,7 @@ def register_user(user_name:str,password:str,user_role:str="player"):
     session.close()
     return True
 
-def accept_mission(username, mission_id):
+def accept_mission(user_name, mission_id):
     session = Session(engine)
     mission = session.get(Mission, mission_id)
     if mission is None:
@@ -127,7 +127,7 @@ def accept_mission(username, mission_id):
         session.close()
         return "inactive"
 
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=user_name).first()
     if player is None:
         session.close()
         return "not_found"
@@ -160,9 +160,9 @@ def accept_mission(username, mission_id):
     return response
 
 
-def submit_mission(username, mission_id, completion_details):
+def submit_mission(user_name, mission_id, completion_details):
     session = Session(engine)
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=user_name).first()
     if player is None:
         session.close()
         return "not_accepted"
@@ -196,6 +196,100 @@ def submit_mission(username, mission_id, completion_details):
     session.close()
     return response
 
+def get_active_player_missions(username):
+    session = Session(engine)
+    player = session.query(Users).filter_by(user_name=username).first()
+    if player is None:
+        session.close()
+        return []
+
+    acceptances = (
+        session.query(MissionAcceptance)
+        .filter_by(player_id=player.user_id, status="accepted")
+        .all()
+    )
+
+    result = []
+    for acc in acceptances:
+        mission = session.get(Mission, acc.mission_id)
+        if mission is not None:
+            result.append({
+                "acceptance_id": acc.id,
+                "mission_id": mission.id,
+                "title": mission.title,
+                "description": mission.description,
+                "difficulty": mission.difficulty,
+                "location": mission.location,
+                "xp_reward": mission.xp_reward,
+                "status": acc.status,
+                "accepted_at": acc.accepted_at,
+            })
+
+    session.close()
+    return result
+
+def review_submission(reviewer_username, submission_id, status):
+    session = Session(engine)
+    acceptance = session.get(MissionAcceptance, submission_id)
+    if acceptance is None:
+        session.close()
+        return "not_found"
+
+    reviewer = session.query(Users).filter_by(user_name=reviewer_username).first()
+    mission = session.get(Mission, acceptance.mission_id)
+    player = session.get(Users, acceptance.player_id)
+
+    acceptance.status = "completed" if status == "approved" else "accepted"
+
+    xp_awarded = 0
+    if status == "approved" and mission is not None and player is not None:
+        xp_awarded = mission.xp_reward
+        player.xp = player.xp + xp_awarded
+
+    session.commit()
+
+    response = {
+        "submission_id": acceptance.id,
+        "mission_id": acceptance.mission_id,
+        "player_id": acceptance.player_id,
+        "status": acceptance.status,
+        "reviewed_by": reviewer.user_id if reviewer is not None else None,
+        "xp_awarded": xp_awarded,
+    }
+    session.close()
+    return response
+
+def get_completed_player_missions(username):
+    session = Session(engine)
+    player = session.query(Users).filter_by(user_name=username).first()
+    if player is None:
+        session.close()
+        return []
+
+    acceptances = (
+        session.query(MissionAcceptance)
+        .filter_by(player_id=player.user_id, status="completed")
+        .all()
+    )
+
+    result = []
+    for acc in acceptances:
+        mission = session.get(Mission, acc.mission_id)
+        if mission is not None:
+            result.append({
+                "acceptance_id": acc.id,
+                "mission_id": mission.id,
+                "title": mission.title,
+                "description": mission.description,
+                "difficulty": mission.difficulty,
+                "location": mission.location,
+                "xp_earned": mission.xp_reward,
+                "completion_details": acc.completion_details,
+                "status": acc.status,
+            })
+
+    session.close()
+    return result
 def create_rewards(name,mission_id):
     session = Session(engine)
     mission = session.get(Mission , mission_id)
@@ -257,12 +351,6 @@ def get_player_rankings(length):
 
     session.close()
     return {"code":200, "leaderboard":response}
-
-
-
-
-
-
 
 def rewards_to_dict(rewards : Rewards):
     return {
