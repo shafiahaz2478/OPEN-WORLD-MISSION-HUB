@@ -239,7 +239,7 @@ def assign_rewards(reward_id , user_id):
     session.commit()
     response = rewards_to_dict(reward)
     session.close()
-    return {"code":200, "leaderboard":response}
+    return {"code":200, "reward":response}
 
 def get_player_rankings(length):
     session = Session(engine)
@@ -256,7 +256,7 @@ def get_player_rankings(length):
         i += 1
 
     session.close()
-    return {"code":200, "rewards":response}
+    return {"code":200, "leaderboard":response}
 
 
 

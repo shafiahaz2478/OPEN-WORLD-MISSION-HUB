@@ -129,7 +129,7 @@ def assign_reward(reward_id: int , user_id : int , token=Header(None)):
         raise HTTPException(status_code=403, detail="Only Mission manager can create rewards")
     result = functions.assign_rewards(reward_id, user_id)
     if result["code"] == 200:
-        return result["leaderboard"]
+        return result["reward"]
     raise HTTPException(status_code=result["code"], detail=result["msg"])
 
 @app.post("/admin/mission-managers")
