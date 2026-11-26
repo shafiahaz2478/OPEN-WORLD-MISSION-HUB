@@ -226,3 +226,23 @@ def get_mission_info_by_id(mission_id:int,token:str = Header(None)): #E4
     if result["code"] == 200:
         return result["mission"]
     raise HTTPException(status_code=result["code"],detail=result["msg"])
+
+@app.patch("/missions/{mission_id}")
+def update_mission(mission_id: int, mission: MissionCreate, token: str = Header(None)):  # E5
+    user = functions.verify_token(token=token, token_type="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user.get("user_role") != "mission_manager":
+        raise HTTPException(status_code=403, detail="Only mission managers can update missions")
+
+    result = functions.update_mission(
+        mission_id=mission_id,
+        title=mission.title,
+        description=mission.description,
+        difficulty=mission.difficulty,
+        location=mission.location,
+        is_active=mission.is_active
+    )
+    if result["code"] == 200:
+        return result["mission"]
+    raise HTTPException(status_code=result["code"], detail=result["msg"])

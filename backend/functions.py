@@ -434,3 +434,27 @@ def get_mission_info_by_id(mission_id: int): #E4 to get specific mission infp
     session.close()
     return {"code": 200, "mission": response}
 
+def update_mission(mission_id: int, title: str, description: str, difficulty: str, location: str, is_active: bool): #E5
+    session = Session(engine)
+    mission= session.get(Mission,mission_id)
+    if mission is None:
+        session.close()
+        return {"code": 404, "msg":"Mission not found"}
+
+    valid_difficulties = ["easy", "medium", "hard", "special"]
+    difficulty = difficulty.lower()
+    if difficulty not in valid_difficulties:
+        session.close()
+        return {"code": 400, "msg": "Invalid difficulty. Must be easy, medium, hard, or special"}
+
+    mission.xp_reward = difficulty_to_xp(difficulty)
+    mission.title = title
+    mission.description = description
+    mission.difficulty = difficulty
+    mission.location = location
+    mission.is_active = is_active
+
+    session.commit()
+    response = mission_to_dict(mission)
+    session.close()
+    return {"code": 200, "mission": response}
