@@ -7,23 +7,26 @@ from argon2.exceptions import VerifyMismatchError
 
 ACCESS_TOKEN_EXPIRY = 15
 REFRESH_TOKEN_EXPIRY = 7 * 24 * 60
-SECRET_KEY ="SECRET123"
+SECRET_KEY ="THEBIGSECRETKEYBECAUSEOLDONEISTOOSHORT"
 ALGORITHM = "HS256"
 
 ph = PasswordHasher()
 
-
+#use this path only when testing in swagger
+#DB_PATH = "missions.db"
+#real path for docker
 DB_PATH = "./app/data/missions.db"
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 Base = declarative_base()
 
 class Users(Base):
-    __tablename__ = "Users"
+    __tablename__ = "users"
     user_id = Column(Integer, primary_key=True)
     user_name = Column(String)
     password = Column(String)
     user_role = Column(String, default ="player")
+    rewards = Column(Integer,default=0)
 
 class Mission(Base):
     __tablename__ = "missions"
@@ -40,11 +43,20 @@ class MissionAcceptance(Base):
     __tablename__ = "mission_acceptances"
     id = Column(Integer, primary_key=True)
     mission_id = Column(Integer, ForeignKey("missions.id"))
-    player_id = Column(Integer, ForeignKey("Users.user_id"))
+    player_id = Column(Integer, ForeignKey("users.user_id"))
     status = Column(String, default="accepted")
     completion_details = Column(String)
     accepted_at = Column(DateTime, default=datetime.now)
     submitted_at = Column(DateTime)
+
+class Rewards(Base):
+    __tablename__ = "rewards"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    mission_id = Column(Integer, ForeignKey("missions.id"))
+    xp = Column(Integer)
+    assigned_to = Column(Integer, ForeignKey("users.user_id") , nullable=True)
+    available = Column(Boolean, default=True)
 
 Base.metadata.create_all(engine)
 
@@ -93,7 +105,7 @@ def verify_token(token,token_type):
 
 #--------- Users -----------
 
-def register_user(user_name:str,password:str,user_role:str="user"):
+def register_user(user_name:str,password:str,user_role:str="player"):
     session = Session(engine)
     user_exists = session.query(Users).filter_by(user_name=user_name).first()
     if user_exists is not None:
@@ -131,7 +143,7 @@ def accept_mission(user_name, mission_id):
 
     acceptance = MissionAcceptance(
         mission_id=mission_id,
-        player_id=player.id,
+        player_id=player.user_id,
         status="accepted",
     )
     session.add(acceptance)
@@ -186,14 +198,14 @@ def submit_mission(user_name, mission_id, completion_details):
 
 def get_active_player_missions(username):
     session = Session(engine)
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=username).first()
     if player is None:
         session.close()
         return []
 
     acceptances = (
         session.query(MissionAcceptance)
-        .filter_by(player_id=player.id, status="accepted")
+        .filter_by(player_id=player.user_id, status="accepted")
         .all()
     )
 
@@ -223,11 +235,11 @@ def review_submission(reviewer_username, submission_id, status):
         session.close()
         return "not_found"
 
-    reviewer = session.query(Users).filter_by(username=reviewer_username).first()
+    reviewer = session.query(Users).filter_by(user_name=reviewer_username).first()
     mission = session.get(Mission, acceptance.mission_id)
     player = session.get(Users, acceptance.player_id)
 
-    acceptance.status =  "completed" if status == "approved" else "accepted"
+    acceptance.status = "completed" if status == "approved" else "accepted"
 
     xp_awarded = 0
     if status == "approved" and mission is not None and player is not None:
@@ -241,7 +253,7 @@ def review_submission(reviewer_username, submission_id, status):
         "mission_id": acceptance.mission_id,
         "player_id": acceptance.player_id,
         "status": acceptance.status,
-        "reviewed_by": reviewer.id if reviewer is not None else None,
+        "reviewed_by": reviewer.user_id if reviewer is not None else None,
         "xp_awarded": xp_awarded,
     }
     session.close()
@@ -249,14 +261,14 @@ def review_submission(reviewer_username, submission_id, status):
 
 def get_completed_player_missions(username):
     session = Session(engine)
-    player = session.query(Users).filter_by(username=username).first()
+    player = session.query(Users).filter_by(user_name=username).first()
     if player is None:
         session.close()
         return []
 
     acceptances = (
         session.query(MissionAcceptance)
-        .filter_by(player_id=player.id, status="approved")
+        .filter_by(player_id=player.user_id, status="completed")
         .all()
     )
 
@@ -278,3 +290,125 @@ def get_completed_player_missions(username):
 
     session.close()
     return result
+def create_rewards(name,mission_id):
+    session = Session(engine)
+    mission = session.get(Mission , mission_id)
+    if not mission_id:
+        return {"code":404 , "msg":"Mission not found"}
+    xp = difficulty_to_xp(mission.difficulty)
+
+
+    reward = Rewards(name=name , mission_id = mission_id , xp = xp)
+    session.add(reward)
+    session.commit()
+    response = rewards_to_dict(reward)
+    session.close()
+    return {"code":200, "reward":response}
+
+def view_all_rewards():
+    session = Session(engine)
+    rewards = session.query(Rewards).filter(Rewards.available == True).all()
+    responses = []
+    for reward in rewards:
+        responses.append(rewards_to_dict(reward))
+    session.close()
+    return {"code":200, "rewards":responses}
+
+def assign_rewards(reward_id , user_id):
+    session = Session(engine)
+    reward = session.get(Rewards, reward_id)
+    if not reward:
+        return {"code":404 , "msg":"Reward not found"}
+
+    user = session.get(Users, user_id)
+    if not user:
+        return {"code":404 , "msg":"User not found"}
+
+    if user.rewards is None:
+        user.rewards = 0
+
+    user.rewards += reward.xp
+
+    reward.assigned_to = user_id
+    session.commit()
+    response = rewards_to_dict(reward)
+    session.close()
+    return {"code":200, "reward":response}
+
+def get_player_rankings(length):
+    session = Session(engine)
+    players = session.query(Users).filter(Users.user_role == "player").order_by(Users.rewards.desc()).limit(length).all()
+
+    response = []
+    i = 1
+    for player in players:
+        response.append({
+            "rank": i,
+            "name" : player.user_name,
+            "xp": player.rewards
+        })
+        i += 1
+
+    session.close()
+    return {"code":200, "leaderboard":response}
+
+def rewards_to_dict(rewards : Rewards):
+    return {
+        "id" : rewards.id,
+        "name" : rewards.name,
+        "mission_id" : rewards.mission_id,
+        "xp" : rewards.xp,
+        "assigned_to" : rewards.assigned_to
+    }
+
+def difficulty_to_xp(difficulty : str):
+    difficulty_to_xp_map = {"easy":50 , "medium":100 , "hard":200, "special":500}
+    return difficulty_to_xp_map[difficulty.lower()]
+
+def create_mission_manager(user_name:str,password:str): #E1
+    session = Session(engine)
+    user_exists = session.query(Users).filter_by(user_name=user_name).first()
+    if user_exists is not None:
+        session.close()
+        return {"code":400 , "msg":"User already exists"}
+    mission_manager = Users(user_name=user_name,password=ph.hash(password),user_role="mission_manager")
+    session.add(mission_manager)
+    session.commit()
+    session.close()
+    return {"code":200 , "msg":"Mission Manager Account created"}
+
+
+def mission_to_dict(mission: Mission): #helper func for getting response in E2
+    return {
+        "id": mission.id,
+        "title": mission.title,
+        "description": mission.description,
+        "difficulty": mission.difficulty,
+        "location": mission.location,
+        "xp_reward": mission.xp_reward,
+        "is_active": mission.is_active
+    }
+
+def create_mission(title: str, description: str, difficulty: str, location: str, is_active: bool = True): #E2
+    session = Session(engine)
+    valid_difficulties = ["easy", "medium", "hard", "special"]
+    difficulty = difficulty.lower()
+    if difficulty not in valid_difficulties:
+        return {"code": 400, "msg": "Invalid difficulty. Must be easy, medium, hard, or special"}
+    xp_reward = difficulty_to_xp(difficulty)
+
+    new_mission = Mission(
+        title=title,
+        description=description,
+        difficulty=difficulty,
+        location=location,
+        xp_reward=xp_reward,
+        is_active=is_active
+    )
+    session.add(new_mission)
+    session.commit()
+    response = mission_to_dict(new_mission)
+    session.close()
+    return {"code":200,"mission":response}
+
+register_user("admin","admin","admin")
