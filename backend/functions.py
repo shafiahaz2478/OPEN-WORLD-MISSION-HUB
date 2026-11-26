@@ -26,7 +26,7 @@ class Users(Base):
     user_name = Column(String)
     password = Column(String)
     user_role = Column(String, default ="player")
-    rewards = Column(Integer)
+    rewards = Column(Integer,default=0)
 
 class Mission(Base):
     __tablename__ = "missions"
@@ -229,6 +229,9 @@ def assign_rewards(reward_id , user_id):
     user = session.get(Users, user_id)
     if not user:
         return {"code":404 , "msg":"User not found"}
+
+    if user.rewards is None:
+        user.rewards = 0
 
     user.rewards += reward.xp
 

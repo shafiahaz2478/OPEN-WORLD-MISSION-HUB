@@ -110,7 +110,7 @@ def create_rewards(reward : CreateReward,token=Header(None)):
 
 
 @app.get("/rewards")
-def create_rewards(token=Header(None)):
+def get_rewards(token=Header(None)):
     user = functions.verify_token(token=token, token_type="access")
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
