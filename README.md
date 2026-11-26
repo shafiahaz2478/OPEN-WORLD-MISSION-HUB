@@ -73,9 +73,9 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E8** | Submit mission completion details | Player | POST |  |  |  | 
 | **E9** | Approve or reject a mission completion | Mission Manager | PATCH |  |  |  | 
 | **E10** | Get a player's completed mission history | Player | GET |  |  |  | 
-| **E11** | Create a reward for a mission | Mission Manager |  |  |  |  | 
-| **E12** | Get available rewards | All |  |  |  |  | 
-| **E13** | Assign a reward to a player | Mission Manager |  |  |  |  | 
+| **E11** | Create a reward for a mission | Mission Manager | POST | /rewards | {"name": "string","mission_id": 0} |  | 
+| **E12** | Get available rewards | All | GET | /rewards |  |  | 
+| **E13** | Assign a reward to a player | Mission Manager | POST | /rewards/{reward_id} |  |  | 
 | **E14** | Get player rankings and leaderboard | All |  |  |  |  | 
 | **E15** | Get player profile and statistics | All |  |  |  |  | 
 
