@@ -68,11 +68,11 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E3** | Get all available missions | All |  |  |  |  | 
 | **E4** | Get details of a particular mission | All |  |  |  |  | 
 | **E5** | Update mission details or availability | Mission Manager |  |  |  |  | 
-| **E6** | Accept a mission | Player | POST |  |  |  | 
-| **E7** | Get missions accepted by the logged-in player | Player | GET |  |  |  | 
-| **E8** | Submit mission completion details | Player | POST |  |  |  | 
-| **E9** | Approve or reject a mission completion | Mission Manager | PATCH |  |  |  | 
-| **E10** | Get a player's completed mission history | Player | GET |  |  |  | 
+| **E6** | Accept a mission | Player | POST | /missions/{mission_id}/accept |  |  | 
+| **E7** | Get missions accepted by the logged-in player | Player | GET | /players/me/missions/active |  |  | 
+| **E8** | Submit mission completion details | Player | POST | /missions/{mission_id}/submit |  |  | 
+| **E9** | Approve or reject a mission completion | Mission Manager | PATCH | /submissions/{submission_id}/review |  |  | 
+| **E10** | Get a player's completed mission history | Player | GET | /players/me/missions/completed |  |  | 
 | **E11** | Create a reward for a mission | Mission Manager |  |  |  |  | 
 | **E12** | Get available rewards | All |  |  |  |  | 
 | **E13** | Assign a reward to a player | Mission Manager |  |  |  |  | 
