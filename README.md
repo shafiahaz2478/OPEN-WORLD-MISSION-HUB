@@ -101,11 +101,11 @@ Build a backend application inspired by open-world games. Players can explore av
 | **E3** | Get all available missions |  |  | 
 | **E4** | Get details of a particular mission |  |  | 
 | **E5** | Update mission details or availability |  |  | 
-| **E6** | Accept a mission |  |  | 
-| **E7** | Get missions accepted by the logged-in player |  |  | 
-| **E8** | Submit mission completion details |  |  | 
-| **E9** | Approve or reject a mission completion |  |  | 
-| **E10** | Get a player's completed mission history |  |  | 
+| **E6** | Accept a mission | Soham | Complete | 
+| **E7** | Get missions accepted by the logged-in player | Soham | Complete | 
+| **E8** | Submit mission completion details | Soham | Complete | 
+| **E9** | Approve or reject a mission completion | Soham | Complete | 
+| **E10** | Get a player's completed mission history | Soham | Complete | 
 | **E11** | Create a reward for a mission |  |  | 
 | **E12** | Get available rewards |  |  | 
 | **E13** | Assign a reward to a player |  |  | 
