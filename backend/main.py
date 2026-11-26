@@ -16,7 +16,6 @@ app.add_middleware(CORSMiddleware,
 class Users(BaseModel):
     user_name: str
     password : str
-    user_role: str
 
 class SubmissionCreate(BaseModel):
     completion_details: str
@@ -39,7 +38,7 @@ class MissionCreate(BaseModel):
 
 @app.post("/auth/register")
 def register_user(user:Users):
-    if functions.register_user(user_name=user.user_name,password=user.password,user_role=user.user_role) is True:
+    if functions.register_user(user_name=user.user_name,password=user.password,user_role="player") is True:
         return {"message": "user registered successfully"}
     raise HTTPException(status_code=400,detail="Username already exists")
 
