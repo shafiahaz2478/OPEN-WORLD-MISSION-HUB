@@ -2,12 +2,17 @@ from sqlalchemy import Integer, String,Float, Column, create_engine, DateTime, F
 from sqlalchemy.orm import Session, declarative_base, session
 from datetime import datetime, date, timedelta, timezone
 import jwt
+import os
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 ACCESS_TOKEN_EXPIRY = 15
 REFRESH_TOKEN_EXPIRY = 7 * 24 * 60
-SECRET_KEY ="THEBIGSECRETKEYBECAUSEOLDONEISTOOSHORT"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 ph = PasswordHasher()
